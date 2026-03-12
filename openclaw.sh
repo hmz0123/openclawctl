@@ -770,9 +770,17 @@ PY
 			gum spin --spinner globe --title "正在安装 OpenClaw..." -- npm install -g openclaw@latest
 		fi
 		hash -r 2>/dev/null || true
-		local npm_prefix
+		local npm_prefix npm_bin
 		npm_prefix=$(npm prefix -g 2>/dev/null)
-		[[ -n "$npm_prefix" ]] && export PATH="$npm_prefix/bin:$PATH"
+		npm_bin="${npm_prefix}/bin"
+		if [[ -n "$npm_bin" ]]; then
+			export PATH="$npm_bin:$PATH"
+			for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile"; do
+				[[ -f "$rc" ]] || continue
+				grep -qF "$npm_bin" "$rc" 2>/dev/null && continue
+				echo "export PATH=\"${npm_bin}:\$PATH\"" >> "$rc"
+			done
+		fi
 		openclaw onboard --install-daemon
 		_sed_i 's|"profile": "messaging"|"profile": "full"|g' ~/.openclaw/openclaw.json
 		configure_openclaw_session_policy
@@ -3073,9 +3081,19 @@ EOF
 		else
 			gum spin --spinner globe --title "正在更新 OpenClaw..." -- npm install -g openclaw@latest
 		fi
+		hash -r 2>/dev/null || true
+		local npm_bin
+		npm_bin="$(npm prefix -g 2>/dev/null)/bin"
+		if [[ -n "$npm_bin" ]]; then
+			export PATH="$npm_bin:$PATH"
+			for rc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile"; do
+				[[ -f "$rc" ]] || continue
+				grep -qF "$npm_bin" "$rc" 2>/dev/null && continue
+				echo "export PATH=\"${npm_bin}:\$PATH\"" >> "$rc"
+			done
+		fi
 		crontab -l 2>/dev/null | grep -v "s gateway" | crontab -
 		start_gateway
-		hash -r
 		ui_ok "更新完成"
 		break_end
 	}
@@ -3098,8 +3116,10 @@ EOF
 		rm -rf /root/.openclaw ~/.openclaw
 
 		rm -f "$HOME/.local/bin/oc" "$HOME/.local/bin/openclawctl.sh" /usr/local/bin/oc
-		for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
-			[[ -f "$rc" ]] && _sed_i '/\.local\/bin.*PATH/d' "$rc"
+		for rc in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.profile"; do
+			[[ -f "$rc" ]] || continue
+			_sed_i '/\.local\/bin.*PATH/d' "$rc"
+			_sed_i '/npm-global.*PATH\|npm\/bin.*PATH/d' "$rc"
 		done
 
 		echo
