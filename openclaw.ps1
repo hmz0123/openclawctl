@@ -56,7 +56,8 @@ function Show-Menu {
 
     try {
         $w = [Console]::WindowWidth
-        $headerLines = $Header ? 3 : 0
+        $headerLines = 0
+        if ($Header) { $headerLines = 3 }
         $totalLines = $headerLines + $Options.Count
 
         $top = [Console]::CursorTop
@@ -73,25 +74,36 @@ function Show-Menu {
         $anchorY = $top
 
         while ($true) {
+            $bufferHeight = [Console]::BufferHeight
+            if ($bufferHeight -le 1) { $bufferHeight = 2 }
+
+            if ($anchorY -lt 0 -or $anchorY + $totalLines + 1 -gt $bufferHeight) {
+                $anchorY = [Math]::Max(0, $bufferHeight - $totalLines - 1)
+            }
+
             $row = $anchorY
 
             if ($Header) {
+                if ($row -ge $bufferHeight) { continue }
                 [Console]::SetCursorPosition(0, $row)
                 $line = ("  $Header").PadRight($w - 1)
                 Write-Host $line -ForegroundColor DarkCyan
                 $row++
 
+                if ($row -ge $bufferHeight) { continue }
                 [Console]::SetCursorPosition(0, $row)
                 $hint = "  ↑↓ 移动 · Enter 确认 · q 退出".PadRight($w - 1)
                 Write-Host $hint -ForegroundColor DarkGray
                 $row++
 
+                if ($row -ge $bufferHeight) { continue }
                 [Console]::SetCursorPosition(0, $row)
                 Write-Host ("".PadRight($w - 1))
                 $row++
             }
 
             for ($i = 0; $i -lt $Options.Count; $i++) {
+                if ($row -ge $bufferHeight) { break }
                 [Console]::SetCursorPosition(0, $row)
                 $prefix = if ($i -eq $sel) { "  > " } else { "    " }
                 $txt = ($prefix + $Options[$i])
