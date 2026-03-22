@@ -334,15 +334,58 @@ moltbot_menu() {
 	ui_header() {
 		gum style \
 			--bold --foreground 51 \
-			--border double --border-foreground 51 \
+			--border rounded --border-foreground 51 \
 			--padding "0 2" "$*"
 		echo
+	}
+
+	_fallback_input() {
+		local prompt="${1:-输入}" placeholder="${2:-}"
+		local val
+		[[ -n "$placeholder" ]] && echo -e "  \033[90m($placeholder)\033[0m"
+		read -rp "  $prompt: " val
+		echo "$val"
+	}
+
+	_fallback_confirm() {
+		local msg="${1:-确认？}"
+		local yn
+		read -rp "  $msg [y/N]: " yn
+		[[ "$yn" == "y" || "$yn" == "Y" ]]
+	}
+
+	_fallback_spin() {
+		local title="$1"; shift
+		echo -e "  \033[90m$title\033[0m"
+		"$@"
 	}
 	ui_ok()   { gum style --foreground 46  "  ◉  $*"; }
 	ui_err()  { gum style --foreground 196 "  ✗  $*"; }
 	ui_warn() { gum style --foreground 208 "  ⚡  $*"; }
 	ui_info() { gum style --foreground 51  "  ◈  $*"; }
 	ui_step() { echo; gum style --bold --foreground 201 "  ▶  $*"; echo; }
+
+	if _has_gum; then
+		ui_header() {
+			gum style \
+				--bold --foreground 51 \
+				--border rounded --border-foreground 51 \
+				--padding "0 2" "$*"
+			echo
+		}
+		ui_ok()   { gum style --foreground 46  "  ◉  $*"; }
+		ui_err()  { gum style --foreground 196 "  ✗  $*"; }
+		ui_warn() { gum style --foreground 208 "  ⚡  $*"; }
+		ui_info() { gum style --foreground 51  "  ◈  $*"; }
+		ui_step() { echo; gum style --bold --foreground 201 "  ▶  $*"; echo; }
+	else
+		ui_header() { echo -e "\n  \033[1;36m══ $* ══\033[0m\n"; }
+		ui_ok()   { echo -e "  \033[32m[OK]\033[0m $*"; }
+		ui_err()  { echo -e "  \033[31m[ERR]\033[0m $*"; }
+		ui_warn() { echo -e "  \033[33m[WARN]\033[0m $*"; }
+		ui_info() { echo -e "  \033[36m[i]\033[0m $*"; }
+		ui_step() { echo -e "\n  \033[35m>>\033[0m $*\n"; }
+	fi
 
 	check_openclaw_update() {
 		if ! command -v npm >/dev/null 2>&1; then
@@ -943,7 +986,7 @@ PY
 		if [[ -n "$login_port" ]]; then
 			if is_macos; then
 				gum style \
-					--border double --border-foreground 51 \
+					--border rounded --border-foreground 51 \
 					--foreground 51 --bold --padding "0 2" \
 					"◈  本地浏览器登录流程"
 				echo
@@ -957,7 +1000,7 @@ PY
 				fi
 			else
 				gum style \
-					--border double --border-foreground 51 \
+					--border rounded --border-foreground 51 \
 					--foreground 51 --bold --padding "0 2" \
 					"◈  服务器登录流程"
 				echo
@@ -1046,7 +1089,7 @@ PY
 
 			gum style \
 				--bold --foreground 51 \
-				--border double --border-foreground 51 \
+				--border rounded --border-foreground 51 \
 				--padding "1 4" --align center \
 				"C L I P R O X Y A P I" \
 				"" \
@@ -1196,7 +1239,7 @@ PY
 		if is_macos; then
 			gum style \
 				--bold --foreground 201 \
-				--border double --border-foreground 201 \
+				--border rounded --border-foreground 201 \
 				--padding "1 6" --align center \
 				"◈  EASY INSTALL  ◈" \
 				"" \
@@ -1204,7 +1247,7 @@ PY
 		else
 			gum style \
 				--bold --foreground 201 \
-				--border double --border-foreground 201 \
+				--border rounded --border-foreground 201 \
 				--padding "1 6" --align center \
 				"◈  EASY INSTALL  ◈" \
 				"" \
@@ -1296,7 +1339,7 @@ PY
 			echo
 			gum style \
 				--bold --foreground 46 \
-				--border double --border-foreground 46 \
+				--border rounded --border-foreground 46 \
 				--padding "1 6" --align center \
 				"◉  INSTALL COMPLETE  ◉" \
 				"" \
@@ -1516,7 +1559,7 @@ except Exception:
 				--header-first \
 				--height=15 \
 				--layout=reverse \
-				--border=double \
+				--border=rounded \
 				--border-label=" ◈ DEFAULT MODEL " \
 				--color=border:51,label:51,header:51,prompt:201,pointer:46,marker:208,hl:208,hl+:208) || default_model=$(echo "$available_models" | head -1)
 			[[ -z "$default_model" ]] && default_model=$(echo "$available_models" | head -1)
@@ -2046,7 +2089,7 @@ PY
 			--header-first \
 			--height=20 \
 			--layout=reverse \
-			--border=double \
+			--border=rounded \
 			--border-label=" ◈ MODEL SELECT " \
 			--color=border:51,label:51,header:51,prompt:201,pointer:46,marker:208,hl:208,hl+:208) || return
 
@@ -3008,7 +3051,7 @@ EOF
 			--header="  选择要删除的备份  │  ↑↓ 移动  / 搜索  Enter 确认  Esc 取消" \
 			--header-first \
 			--height=15 \
-			--border=double \
+			--border=rounded \
 			--border-label=" ⚡ DELETE BACKUP " \
 			--color=border:196,label:196,header:196,prompt:208,pointer:196,marker:208,hl:208,hl+:208) || { echo "已取消"; break_end; return 0; }
 
@@ -3330,7 +3373,7 @@ EOF
 
 		gum style \
 			--bold --foreground 51 \
-			--border double --border-foreground 51 \
+			--border rounded --border-foreground 51 \
 			--padding "1 8" --align center \
 			"O P E N C L A W" \
 			"" \
@@ -3340,7 +3383,7 @@ EOF
 		echo
 		gum style \
 			--bold \
-			--border double --border-foreground 201 \
+			--border rounded --border-foreground 201 \
 			--padding "0 4" --align center \
 			"$(gum style --bold --foreground 201 '◈  by Joey  ◈')" \
 			"$(gum style --bold --foreground 51  '▶  YouTube   @joeyblog')" \
